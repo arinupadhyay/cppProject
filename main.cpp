@@ -1,119 +1,160 @@
-/**
- * ============================================================================
- * BLOCKCHAIN VOTING SYSTEM - MAIN ENTRY POINT
- * ============================================================================
- * Demonstrates:
- * 1. Abstraction (Pure virtual interfaces IVerifiable, ICryptoHashable)
- * 2. Encapsulation (Private fields, invariant enforcement, const correctness)
- * 3. Inheritance (User -> Voter, User -> Candidate, AbstractBlock -> Block)
- * 4. Polymorphism (Runtime dynamic dispatch with smart pointers, template MerkleTree)
- * 5. Operator Overloading (==, !=, <<)
- * 6. Native POSIX Socket Web Server serving HTML/CSS/JS frontend + JSON API
- * ============================================================================
- */
-
-#include "include/Blockchain.hpp"
-#include "include/Voter.hpp"
-#include "include/Candidate.hpp"
-#include "include/HttpServer.hpp"
-#include "include/SHA256.hpp"
+#include "blockchain.hpp"
 #include <iostream>
 #include <memory>
 #include <vector>
-#include <string>
+
+using namespace std;
 
 void printBanner() {
-    std::cout << "\n";
-    std::cout << "==================================================================\n";
-    std::cout << "   _     _            _        _           _       \n";
-    std::cout << "  | |   | |          | |      | |         (_)      \n";
-    std::cout << "  | |__ | | ___   ___| | _____| |__   __ _ _ _ __  \n";
-    std::cout << "  | '_ \\| |/ _ \\ / __| |/ / __| '_ \\ / _` | | '_ \\ \n";
-    std::cout << "  | |_) | | (_) | (__|   < (__| | | | (_| | | | | |\n";
-    std::cout << "  |_.__/|_|\\___/ \\___|_|\\_\\___|_| |_|\\__,_|_|_| |_|\n";
-    std::cout << "             V O T I N G   S Y S T E M             \n";
-    std::cout << "==================================================================\n";
-    std::cout << " Built with C++17 OOP Architecture & Native POSIX Web Server\n";
-    std::cout << " Encapsulation * Abstraction * Inheritance * Polymorphism * Templates\n";
-    std::cout << "==================================================================\n\n";
+    cout << "\n";
+    cout << "==================================================================\n";
+    cout << "         BLOCKCHAIN VOTING SYSTEM (C++ OOP ARCHITECTURE)          \n";
+    cout << "==================================================================\n";
+    cout << " Features: Proof-of-Work, Tamper Detection, Anti-Double Voting    \n";
+    cout << " Concepts: Abstraction, Encapsulation, Inheritance, Polymorphism\n";
+    cout << "==================================================================\n\n";
 }
 
-void seedSampleData(std::shared_ptr<Blockchain> blockchain) {
-    std::cout << "[INIT] Seeding initial election candidates and registered voters...\n";
+// Live demonstration of all 4 OOP concepts in 20 lines of code!
+void demonstrateOOP() {
+    cout << "\n==================================================================\n";
+    cout << "             LIVE OOP DEMONSTRATION FOR EXAMINER                   \n";
+    cout << "==================================================================\n";
 
-    // 1. Create candidates (Demonstrating Candidate : User inheritance)
-    Candidate cand1("CAND-01", "Alice Vance", "alice@tech.org", "Decentralized Alliance", "Zero-Knowledge Privacy for all", "ELECTION-2026", "ALICE");
-    Candidate cand2("CAND-02", "Bob Thorne", "bob@cyber.io", "Cyber Security Front", "Quantum-resistant blockchain auditing", "ELECTION-2026", "BOB");
-    Candidate cand3("CAND-03", "Clara Oswald", "clara@future.org", "Open Ledger Coalition", "Transparent public budgets on-chain", "ELECTION-2026", "CLARA");
+    cout << "1. ENCAPSULATION:\n";
+    cout << "   - Class members (id, name, hasVoted, hash) are private/protected.\n";
+    cout << "   - Outside code cannot change them directly; must use getters/setters.\n\n";
 
-    std::cout << "  -> Registered candidate: "; cand1.display(); std::cout << "\n";
-    std::cout << "  -> Registered candidate: "; cand2.display(); std::cout << "\n";
-    std::cout << "  -> Registered candidate: "; cand3.display(); std::cout << "\n";
+    cout << "2. INHERITANCE:\n";
+    cout << "   - Base Class: User(id, name)\n";
+    cout << "   - Child Class 1: Voter inherits from User (adds hasVoted)\n";
+    cout << "   - Child Class 2: Candidate inherits from User (adds party, votes)\n\n";
 
-    // 2. Create voters (Demonstrating Voter : User inheritance)
-    Voter voter1("VTR-1001", "David Miller", "david@univ.edu", "0x7a892b1e4590c34512fd45ab1209e8745c1234aa", "PUB_KEY_1001", "PRIV_KEY_1001");
-    Voter voter2("VTR-1002", "Elena Rostova", "elena@tech.io", "0x3f56bc78129034ade1289fe409a87123bc456789", "PUB_KEY_1002", "PRIV_KEY_1002");
-    Voter voter3("VTR-1003", "Farhan Qureshi", "farhan@city.org", "0x98124ef5601278ba90123ef6712398ab76123450", "PUB_KEY_1003", "PRIV_KEY_1003");
+    cout << "3. RUNTIME POLYMORPHISM (Dynamic Dispatch):\n";
+    cout << "   - Storing child objects in a base pointer vector (vector<unique_ptr<User>>):\n";
 
-    blockchain->registerVoter(voter1);
-    blockchain->registerVoter(voter2);
-    blockchain->registerVoter(voter3);
+    vector<unique_ptr<User>> users;
+    users.push_back(make_unique<Voter>("VTR-01", "Alice Johnson"));
+    users.push_back(make_unique<Candidate>("CND-01", "Bob Smith", "Tech Party"));
 
-    // 3. Cast initial demo votes
-    std::string sig1 = voter1.signPayload("ELECTION-2026:CAND-01:Alice Vance:" + voter1.getVoterAddress());
-    VoteTransaction tx1("ELECTION-2026", "CAND-01", "Alice Vance", voter1.getVoterAddress(), voter1.getPublicKey(), sig1);
-    blockchain->addVote(tx1);
-
-    std::string sig2 = voter2.signPayload("ELECTION-2026:CAND-02:Bob Thorne:" + voter2.getVoterAddress());
-    VoteTransaction tx2("ELECTION-2026", "CAND-02", "Bob Thorne", voter2.getVoterAddress(), voter2.getPublicKey(), sig2);
-    blockchain->addVote(tx2);
-
-    std::cout << "[MINING] Mining initial Block #1 with Proof-of-Work (Difficulty: " << blockchain->getDifficulty() << ")...\n";
-    auto block1 = blockchain->minePendingVotes("Validator-Alpha");
-    std::cout << "  -> Mined Block #1 Hash: " << block1->getHash() << " (Nonce: " << block1->getNonce() << ")\n";
-
-    // Cast a vote for Block #2
-    std::string sig3 = voter3.signPayload("ELECTION-2026:CAND-01:Alice Vance:" + voter3.getVoterAddress());
-    VoteTransaction tx3("ELECTION-2026", "CAND-01", "Alice Vance", voter3.getVoterAddress(), voter3.getPublicKey(), sig3);
-    blockchain->addVote(tx3);
-
-    std::cout << "[MINING] Mining Block #2...\n";
-    auto block2 = blockchain->minePendingVotes("Validator-Beta");
-    std::cout << "  -> Mined Block #2 Hash: " << block2->getHash() << " (Nonce: " << block2->getNonce() << ")\n";
-
-    std::string audit;
-    bool isValid = blockchain->isChainValid(audit);
-    std::cout << "[AUDIT] Initial Blockchain Status: " << (isValid ? "VALID (100% Verified)" : "COMPROMISED") << "\n";
-    std::cout << "        " << audit << "\n\n";
-}
-
-int main(int argc, char* argv[]) {
-    printBanner();
-
-    int port = 8080;
-    std::string webRoot = "./public";
-
-    for (int i = 1; i < argc; ++i) {
-        std::string arg = argv[i];
-        if (arg == "--port" && i + 1 < argc) {
-            port = std::stoi(argv[++i]);
-        } else if (arg == "--webroot" && i + 1 < argc) {
-            webRoot = argv[++i];
-        }
+    for (const auto& u : users) {
+        cout << "   -> ";
+        u->display(); // Dynamically calls child class method at runtime!
+        cout << "\n";
     }
 
-    // Instantiate Blockchain engine
-    auto blockchain = std::make_shared<Blockchain>(2);
-    seedSampleData(blockchain);
+    cout << "\n4. ABSTRACTION:\n";
+    cout << "   - 'AbstractBlock' defines pure virtual functions: mine() and calculateHash().\n";
+    cout << "   - 'Block' provides the concrete implementation of Proof-of-Work.\n\n";
 
-    // Launch Native C++ POSIX Web Server
-    HttpServer server(port, webRoot, blockchain);
+    cout << "5. OPERATOR OVERLOADING (Compile-time Polymorphism):\n";
+    cout << "   - 'operator<<' overloaded so we can write 'cout << block;' directly!\n";
+    cout << "==================================================================\n\n";
+}
 
-    try {
-        server.start();
-    } catch (const std::exception& e) {
-        std::cerr << "Server Error: " << e.what() << std::endl;
-        return 1;
+int main() {
+    printBanner();
+
+    // Initialize Blockchain with difficulty 2
+    Blockchain bc(2);
+
+    // Register initial candidates
+    bc.registerCandidate("CND-1", "Alice Vance", "Decentralized Party");
+    bc.registerCandidate("CND-2", "Bob Thorne", "Cyber Security Front");
+    bc.registerCandidate("CND-3", "Clara Oswald", "Open Ledger Coalition");
+
+    // Register initial voters
+    bc.registerVoter("VTR-101", "John Doe");
+    bc.registerVoter("VTR-102", "Jane Smith");
+    bc.registerVoter("VTR-103", "David Miller");
+
+    // Seed one initial vote and mine Block #1
+    cout << "[*] Seeding initial demonstration vote...\n";
+    bc.castVote("VTR-101", "Alice Vance");
+    bc.minePendingVotes();
+
+    int choice = -1;
+    while (choice != 0) {
+        cout << "\n---------------- MENU ----------------\n";
+        cout << " 1. Cast a Vote\n";
+        cout << " 2. Mine Pending Votes into Block\n";
+        cout << " 3. View Election Results\n";
+        cout << " 4. View All Blockchain Blocks\n";
+        cout << " 5. Register New Voter\n";
+        cout << " 6. Check Blockchain Validity (Audit)\n";
+        cout << " 7. Tamper a Block (Attack Simulation)\n";
+        cout << " 8. Explain / Demonstrate All OOP Concepts\n";
+        cout << " 0. Exit\n";
+        cout << "Select option [0-8]: ";
+
+        if (!(cin >> choice)) {
+            cin.clear();
+            string discard;
+            cin >> discard;
+            continue;
+        }
+
+        switch (choice) {
+            case 1: {
+                string vId, cName;
+                cout << "Enter Voter ID (e.g. VTR-102): ";
+                cin >> vId;
+                cout << "Candidate options: Alice Vance, Bob Thorne, Clara Oswald\n";
+                cout << "Enter Candidate Name: ";
+                cin.ignore();
+                getline(cin, cName);
+                bc.castVote(vId, cName);
+                break;
+            }
+            case 2:
+                bc.minePendingVotes();
+                break;
+            case 3:
+                bc.displayResults();
+                break;
+            case 4: {
+                cout << "\n--- BLOCKCHAIN LEDGER (" << bc.getChainSize() << " BLOCKS) ---\n";
+                for (const auto& b : bc.getChain()) {
+                    cout << b << "\n";
+                }
+                break;
+            }
+            case 5: {
+                string id, name;
+                cout << "Enter New Voter ID (e.g. VTR-104): ";
+                cin >> id;
+                cout << "Enter Voter Full Name: ";
+                cin.ignore();
+                getline(cin, name);
+                bc.registerVoter(id, name);
+                cout << "Registered voter: " << name << " (" << id << ")\n";
+                break;
+            }
+            case 6: {
+                string report;
+                bool ok = bc.isChainValid(report);
+                cout << "\n[AUDIT RESULT] " << (ok ? "PASSED (100% Tamper-Free)" : "COMPROMISED (Tamper Detected!)") << "\n";
+                cout << "Status: " << report << "\n";
+                break;
+            }
+            case 7: {
+                int bIndex;
+                cout << "Enter Block Number to Tamper (e.g. 1): ";
+                cin >> bIndex;
+                bc.tamperBlock(bIndex, "HACKED_CANDIDATE");
+                cout << "Now run Option 6 to see the blockchain catch the attack!\n";
+                break;
+            }
+            case 8:
+                demonstrateOOP();
+                break;
+            case 0:
+                cout << "Exiting. Thank you!\n";
+                break;
+            default:
+                cout << "Invalid choice. Please choose 0 to 8.\n";
+                break;
+        }
     }
 
     return 0;

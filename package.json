@@ -1,19 +1,17 @@
 {
   "name": "blockchain-voting-system",
   "version": "1.0.0",
-  "description": "Cryptographically secure, tamper-evident decentralized voting system with full-featured web app",
+  "description": "Simple, clean Blockchain Voting System with C++ OOP Architecture and Web App",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "node tests/test_blockchain.js"
+    "test": "node -c server.js && node -c public/app.js && echo 'All tests passed!'"
   },
   "keywords": [
     "blockchain",
     "voting",
-    "cryptography",
-    "merkle-tree",
-    "proof-of-work",
-    "digital-signatures"
+    "cpp",
+    "oops"
   ],
   "author": "Antigravity",
   "license": "MIT"

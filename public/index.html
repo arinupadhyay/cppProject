@@ -3,621 +3,154 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Decentralized Blockchain Voting System</title>
+  <title>Blockchain Voting System</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Header / Navigation -->
-  <header class="app-header">
-    <div class="header-container">
-      <div class="brand">
-        <div class="logo-box">
-          <svg class="logo-svg" viewBox="0 0 40 40" fill="none">
-            <path d="M20 4L34 12V28L20 36L6 28V12L20 4Z" stroke="#38bdf8" stroke-width="2.5" fill="#0284c7" fill-opacity="0.2"/>
-            <path d="M14 20L18 24L26 16" stroke="#38bdf8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
+
+  <!-- Top Header -->
+  <header class="navbar">
+    <div class="nav-content">
+      <div class="logo">
+        <span class="logo-icon">🗳️</span>
         <div>
-          <h1 class="brand-title">BLOCKCHAIN <span>VOTE</span></h1>
-          <p class="brand-subtitle">C++ OOP Core &middot; Cryptographic Ledger &middot; Merkle Proofs</p>
+          <h2>Blockchain Voting System</h2>
+          <small>C++ OOP Architecture &middot; Proof-of-Work &middot; Tamper Detection</small>
         </div>
       </div>
-
-      <div class="header-status">
-        <div class="status-chip" id="networkStatusBadge">
-          <span class="status-pulse"></span>
-          <span id="networkStatusText">Ledger Online</span>
-        </div>
-        <div class="integrity-chip valid" id="chainIntegrityBadge">
-          <span class="icon">🛡️</span>
-          <span id="chainIntegrityText">100% Verified</span>
-        </div>
+      <div class="badge-group">
+        <span class="badge online" id="statusBadge">● System Online</span>
+        <span class="badge secure" id="auditBadge">🛡️ 100% Tamper-Free</span>
       </div>
     </div>
-
-    <!-- Navigation Tabs -->
-    <nav class="nav-tabs">
-      <button class="nav-tab active" data-tab="dashboard">
-        <span class="tab-icon">📊</span> Overview
-      </button>
-      <button class="nav-tab" data-tab="booth">
-        <span class="tab-icon">🗳️</span> Voting Booth
-      </button>
-      <button class="nav-tab" data-tab="register">
-        <span class="tab-icon">🔑</span> Voter Registration
-      </button>
-      <button class="nav-tab" data-tab="explorer">
-        <span class="tab-icon">⛓️</span> Block Explorer
-      </button>
-      <button class="nav-tab" data-tab="results">
-        <span class="tab-icon">📈</span> Live Results
-      </button>
-      <button class="nav-tab" data-tab="miner">
-        <span class="tab-icon">⛏️</span> Mining Console
-      </button>
-      <button class="nav-tab" data-tab="tamper">
-        <span class="tab-icon">🚨</span> Security Lab
-      </button>
-      <button class="nav-tab" data-tab="oop">
-        <span class="tab-icon">🏛️</span> C++ OOP Architecture
-      </button>
-    </nav>
   </header>
 
-  <!-- Notification Toast Container -->
-  <div id="toastContainer" class="toast-container"></div>
+  <main class="container">
 
-  <!-- Main Content Layout -->
-  <main class="app-main">
-
-    <!-- METRICS RIBBON (Always visible at top) -->
-    <section class="stats-ribbon">
-      <div class="stat-card">
-        <div class="stat-icon cyan">⛓️</div>
-        <div class="stat-info">
-          <span class="stat-label">Block Height</span>
-          <span class="stat-value" id="statBlockCount">-</span>
-        </div>
+    <!-- Metrics Cards -->
+    <section class="metrics-grid">
+      <div class="metric-card">
+        <span class="label">Total Blocks</span>
+        <span class="value" id="totalBlocks">-</span>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon emerald">🗳️</div>
-        <div class="stat-info">
-          <span class="stat-label">Mined Ballots</span>
-          <span class="stat-value" id="statTotalVotes">-</span>
-        </div>
+      <div class="metric-card">
+        <span class="label">Mempool (Pending)</span>
+        <span class="value" id="mempoolCount">0</span>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon amber">⏳</div>
-        <div class="stat-info">
-          <span class="stat-label">Mempool (Pending)</span>
-          <span class="stat-value" id="statMempoolCount">-</span>
-        </div>
+      <div class="metric-card">
+        <span class="label">Registered Voters</span>
+        <span class="value" id="votersCount">-</span>
       </div>
-      <div class="stat-card">
-        <div class="stat-icon purple">🎯</div>
-        <div class="stat-info">
-          <span class="stat-label">PoW Difficulty</span>
-          <span class="stat-value" id="statDifficulty">-</span>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon blue">⚡</div>
-        <div class="stat-info">
-          <span class="stat-label">Ledger Protocol</span>
-          <span class="stat-value small">C++17 SHA-256</span>
-        </div>
+      <div class="metric-card">
+        <span class="label">Mining Difficulty</span>
+        <span class="value">2 Zeros (00...)</span>
       </div>
     </section>
 
-    <!-- TAB 1: OVERVIEW & DASHBOARD -->
-    <div id="tab-dashboard" class="tab-panel active">
-      <div class="grid-2col">
-        <!-- Quick Action / Status -->
-        <div class="panel-card">
+    <!-- Main 2-Column Grid -->
+    <div class="main-grid">
+
+      <!-- LEFT: Actions (Vote, Register, Mine) -->
+      <div class="column">
+
+        <!-- 1. Cast Vote Card -->
+        <div class="card">
           <div class="card-header">
-            <h3>⚡ System Health & Live Audit</h3>
-            <button class="btn-sm btn-outline" id="btnAuditNow">Run Deep Audit</button>
+            <h3>🗳️ 1. Cast Your Vote</h3>
+            <span class="tag">Anti-Double Voting</span>
           </div>
-          <div class="card-body">
-            <div class="audit-summary-box" id="dashboardAuditBox">
-              <div class="audit-icon">🛡️</div>
-              <div class="audit-details">
-                <h4 id="dashAuditTitle">Cryptographic Chain Verified</h4>
-                <p id="dashAuditMsg">All blocks, previous hashes, Merkle roots, and voter digital signatures pass consensus verification.</p>
-              </div>
-            </div>
-
-            <div class="quick-steps">
-              <h4>🚀 How It Works</h4>
-              <div class="step-item">
-                <span class="step-num">1</span>
-                <div>
-                  <strong>Generate Voter Keypair</strong>
-                  <p>Each citizen receives an asymmetric cryptographic keypair and derived public address.</p>
-                </div>
-              </div>
-              <div class="step-item">
-                <span class="step-num">2</span>
-                <div>
-                  <strong>Cast Digitally Signed Ballot</strong>
-                  <p>The vote payload is signed with the voter's private key and pushed to the mempool.</p>
-                </div>
-              </div>
-              <div class="step-item">
-                <span class="step-num">3</span>
-                <div>
-                  <strong>Proof-of-Work Mining & Merkle Tree</strong>
-                  <p>Validator nodes bundle votes, compute the Merkle Root, and solve the PoW cryptographic puzzle.</p>
-                </div>
-              </div>
-              <div class="step-item">
-                <span class="step-num">4</span>
-                <div>
-                  <strong>Transparent Public Auditing</strong>
-                  <p>Anyone can audit the immutable ledger, inspect block headers, and tally results with zero fraud.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Latest Blocks & Mempool Preview -->
-        <div class="panel-card">
-          <div class="card-header">
-            <h3>📦 Recent Ledger Blocks</h3>
-            <span class="badge" id="badgeLatestBlock">Height: #0</span>
-          </div>
-          <div class="card-body">
-            <div class="recent-blocks-list" id="dashboardRecentBlocks">
-              <!-- Dynamically Populated -->
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- TAB 2: VOTING BOOTH -->
-    <div id="tab-booth" class="tab-panel">
-      <div class="panel-card max-w-4xl mx-auto">
-        <div class="card-header">
-          <div>
-            <h3>🗳️ Cast Your Ballot</h3>
-            <p class="text-muted">General Election 2026 &middot; Cryptographically Signed &amp; Tamper-Evident</p>
-          </div>
-          <span class="badge blue">Double-Voting Protected</span>
-        </div>
-        <div class="card-body">
           <form id="voteForm">
-            <!-- Candidate Selection -->
-            <label class="form-label">Step 1: Select Candidate</label>
-            <div class="candidate-grid" id="candidateSelectionGrid">
-              <!-- Dynamically populated or rendered -->
-              <label class="candidate-card selected">
-                <input type="radio" name="candidate" value="CAND-01" data-name="Alice Vance" checked>
-                <div class="cand-avatar">👩‍💼</div>
-                <div class="cand-info">
-                  <h4 class="cand-name">Alice Vance</h4>
-                  <span class="cand-party">Decentralized Alliance</span>
-                  <p class="cand-manifesto">"Zero-Knowledge Privacy for all citizens, open source transparency."</p>
-                </div>
-                <div class="cand-check">✓</div>
-              </label>
-
-              <label class="candidate-card">
-                <input type="radio" name="candidate" value="CAND-02" data-name="Bob Thorne">
-                <div class="cand-avatar">👨‍💻</div>
-                <div class="cand-info">
-                  <h4 class="cand-name">Bob Thorne</h4>
-                  <span class="cand-party">Cyber Security Front</span>
-                  <p class="cand-manifesto">"Quantum-resistant cryptographic infrastructure and verifiable civic governance."</p>
-                </div>
-                <div class="cand-check">✓</div>
-              </label>
-
-              <label class="candidate-card">
-                <input type="radio" name="candidate" value="CAND-03" data-name="Clara Oswald">
-                <div class="cand-avatar">👩‍🔬</div>
-                <div class="cand-info">
-                  <h4 class="cand-name">Clara Oswald</h4>
-                  <span class="cand-party">Open Ledger Coalition</span>
-                  <p class="cand-manifesto">"Public budget allocation on-chain with instant verifiable auditing."</p>
-                </div>
-                <div class="cand-check">✓</div>
-              </label>
-            </div>
-
-            <!-- Voter Authentication & Digital Signing -->
-            <div class="form-divider"></div>
-            <label class="form-label">Step 2: Sign With Voter Cryptographic Credentials</label>
-            
-            <div class="form-row">
-              <div class="form-group flex-1">
-                <label for="voteVoterAddress">Voter Public Address (0x...)</label>
-                <input type="text" id="voteVoterAddress" class="form-input font-mono" placeholder="0x7a892b1e4590c34512fd45ab1209e8745c1234aa" required>
-              </div>
-              <div class="form-group flex-1">
-                <label for="votePrivateKey">Voter Private Key (Signing Key)</label>
-                <input type="password" id="votePrivateKey" class="form-input font-mono" placeholder="Enter private key or generate one" required>
-              </div>
-            </div>
-
-            <div class="booth-helper">
-              <span>💡 Don't have credentials yet?</span>
-              <button type="button" class="btn-link" id="btnGoToRegister">Generate Voter Credentials in 1-Click &rarr;</button>
-            </div>
-
-            <button type="submit" class="btn-primary w-full mt-4" id="btnSubmitVote">
-              <span>🔒 Digitally Sign &amp; Cast Vote On-Chain</span>
-            </button>
-          </form>
-
-          <!-- Vote Receipt Display -->
-          <div id="voteReceiptBox" class="receipt-box hidden">
-            <div class="receipt-header">
-              <span class="receipt-icon">🎉</span>
-              <div>
-                <h4>Ballot Successfully Cast!</h4>
-                <p>Your transaction has been cryptographically signed and added to the mempool.</p>
-              </div>
-            </div>
-            <div class="receipt-details">
-              <div class="receipt-row">
-                <span class="label">Transaction Hash:</span>
-                <span class="value font-mono" id="receiptTxHash">-</span>
-              </div>
-              <div class="receipt-row">
-                <span class="label">Digital Signature:</span>
-                <span class="value font-mono" id="receiptSignature">-</span>
-              </div>
-              <div class="receipt-row">
-                <span class="label">Candidate:</span>
-                <span class="value font-bold" id="receiptCandidate">-</span>
-              </div>
-              <div class="receipt-row">
-                <span class="label">Status:</span>
-                <span class="value badge amber" id="receiptStatus">PENDING IN MEMPOOL</span>
-              </div>
-            </div>
-            <div class="receipt-actions">
-              <button class="btn-sm btn-outline" id="btnMineNowFromReceipt">⛏️ Mine This Ballot Now</button>
-              <button class="btn-sm btn-outline" id="btnCopyTxHash">Copy TX Hash</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- TAB 3: VOTER REGISTRATION -->
-    <div id="tab-register" class="tab-panel">
-      <div class="panel-card max-w-3xl mx-auto">
-        <div class="card-header">
-          <div>
-            <h3>🔑 Cryptographic Voter Registration</h3>
-            <p class="text-muted">Issues unique asymmetric credentials and registers voter on the ledger</p>
-          </div>
-          <span class="badge emerald">Authorized Registry</span>
-        </div>
-        <div class="card-body">
-          <form id="registerForm">
-            <div class="form-row">
-              <div class="form-group flex-1">
-                <label for="regName">Full Legal Name</label>
-                <input type="text" id="regName" class="form-input" placeholder="e.g. John Doe" required>
-              </div>
-              <div class="form-group flex-1">
-                <label for="regEmail">Civic Email Address</label>
-                <input type="email" id="regEmail" class="form-input" placeholder="john.doe@civic.gov" required>
-              </div>
+            <div class="form-group">
+              <label for="voterSelect">Select Your Voter ID:</label>
+              <select id="voterSelect" class="input" required>
+                <!-- Populated dynamically -->
+              </select>
             </div>
             <div class="form-group">
-              <label for="regVoterId">Government / Voter ID Number (Optional)</label>
-              <input type="text" id="regVoterId" class="form-input" placeholder="Leave blank to auto-generate (e.g. VTR-8B4F92A1)">
+              <label>Select Candidate:</label>
+              <div class="candidate-options" id="candidateOptions">
+                <!-- Populated dynamically -->
+              </div>
             </div>
-            <button type="submit" class="btn-primary w-full" id="btnRegisterVoter">
-              <span>Generate Cryptographic Identity &amp; Register</span>
-            </button>
+            <button type="submit" class="btn btn-primary">Cast Ballot</button>
           </form>
-
-          <!-- Generated Credentials Card -->
-          <div id="voterCredentialsCard" class="credentials-box hidden">
-            <div class="cred-header">
-              <span class="icon">🎟️</span>
-              <h4>Your Official Cryptographic Voter Pass</h4>
-            </div>
-            <p class="cred-warning">⚠️ Save your Private Key safely! It is used to digitally sign your vote and cannot be retrieved if lost.</p>
-
-            <div class="cred-field">
-              <label>Voter ID:</label>
-              <div class="copy-input-group">
-                <input type="text" id="outVoterId" readonly class="form-input font-mono">
-                <button type="button" class="btn-copy" onclick="copyField('outVoterId')">Copy</button>
-              </div>
-            </div>
-
-            <div class="cred-field">
-              <label>Public Address (Your public identity on ledger):</label>
-              <div class="copy-input-group">
-                <input type="text" id="outAddress" readonly class="form-input font-mono">
-                <button type="button" class="btn-copy" onclick="copyField('outAddress')">Copy</button>
-              </div>
-            </div>
-
-            <div class="cred-field">
-              <label>Private Key (Your secret signing key):</label>
-              <div class="copy-input-group">
-                <input type="text" id="outPrivateKey" readonly class="form-input font-mono text-amber">
-                <button type="button" class="btn-copy" onclick="copyField('outPrivateKey')">Copy</button>
-              </div>
-            </div>
-
-            <button type="button" class="btn-primary w-full mt-4" id="btnUseInBooth">
-              📥 Auto-Fill Credentials into Voting Booth &amp; Vote &rarr;
-            </button>
-          </div>
+          <div id="voteMessage" class="alert hidden"></div>
         </div>
-      </div>
-    </div>
 
-    <!-- TAB 4: BLOCK EXPLORER -->
-    <div id="tab-explorer" class="tab-panel">
-      <div class="panel-card">
-        <div class="card-header">
-          <div>
-            <h3>⛓️ Immutable Blockchain Ledger Explorer</h3>
-            <p class="text-muted">Inspect block headers, SHA-256 hashes, Merkle roots, and cryptographic proofs</p>
-          </div>
-          <button class="btn-sm btn-outline" id="btnRefreshChain">🔄 Refresh Chain</button>
-        </div>
-        <div class="card-body">
-          <!-- Horizontal / Timeline Block Visualizer -->
-          <div class="chain-timeline" id="chainTimeline">
-            <!-- Dynamically populated blocks -->
-          </div>
-
-          <!-- Selected Block Detailed View -->
-          <div class="block-inspector" id="blockInspector">
-            <div class="inspector-empty">Click on any block above to inspect its cryptographic headers and transactions</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- TAB 5: LIVE RESULTS -->
-    <div id="tab-results" class="tab-panel">
-      <div class="panel-card max-w-4xl mx-auto">
-        <div class="card-header">
-          <div>
-            <h3>📈 Live Audited Election Results</h3>
-            <p class="text-muted">Real-time tally computed directly by auditing the immutable blockchain ledger</p>
-          </div>
-          <button class="btn-sm btn-outline" id="btnRefreshResults">🔄 Re-Tally Ledger</button>
-        </div>
-        <div class="card-body">
-          <div class="results-summary-row">
-            <div class="res-box">
-              <span class="res-label">Total Audited Ballots</span>
-              <span class="res-val" id="resTotalVotes">0</span>
-            </div>
-            <div class="res-box">
-              <span class="res-label">Leading Candidate</span>
-              <span class="res-val" id="resLeader">-</span>
-            </div>
-            <div class="res-box">
-              <span class="res-label">Audit Guarantee</span>
-              <span class="res-val text-emerald">100% Cryptographic</span>
-            </div>
-          </div>
-
-          <!-- Dynamic Bar Chart Tally -->
-          <div class="results-list" id="resultsList">
-            <!-- Dynamically populated candidate bars -->
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- TAB 6: MINING CONSOLE -->
-    <div id="tab-miner" class="tab-panel">
-      <div class="grid-2col">
-        <!-- Mempool Pending -->
-        <div class="panel-card">
+        <!-- 2. Mining Card -->
+        <div class="card">
           <div class="card-header">
-            <div>
-              <h3>⏳ Mempool (Pending Transactions)</h3>
-              <p class="text-muted">Unmined votes waiting to be bundled into the next block</p>
-            </div>
-            <span class="badge amber" id="badgeMempoolCount">0 Pending</span>
+            <h3>⛏️ 2. Mine Pending Votes (Proof of Work)</h3>
+            <span class="tag purple">Consensus</span>
           </div>
-          <div class="card-body">
-            <div class="mempool-list" id="mempoolList">
-              <!-- Dynamically populated -->
-            </div>
+          <p class="muted">Votes in the mempool must be solved with Proof-of-Work before becoming part of the permanent immutable blockchain.</p>
+          <div class="mempool-box" id="mempoolList">
+            <em>No pending votes in mempool.</em>
           </div>
+          <button id="btnMine" class="btn btn-purple mt">Mine Block Now</button>
         </div>
 
-        <!-- Proof-of-Work Mining Engine -->
-        <div class="panel-card">
+        <!-- 3. Register New Voter Card -->
+        <div class="card">
           <div class="card-header">
-            <div>
-              <h3>⛏️ Proof-of-Work Mining Station</h3>
-              <p class="text-muted">Compute SHA-256 hash satisfying difficulty target</p>
-            </div>
-            <span class="badge purple" id="badgeMinerDiff">Target: 00...</span>
+            <h3>👤 3. Register New Voter</h3>
           </div>
-          <div class="card-body">
-            <div class="mining-status-box">
-              <div class="mining-anim-box" id="miningAnimBox">
-                <div class="cube-spinner"></div>
-                <div class="mining-text" id="miningText">Miner Standby</div>
-              </div>
-
-              <div class="mining-metrics">
-                <div class="metric-row">
-                  <span>Target Prefix:</span>
-                  <span class="font-mono" id="minerTargetStr">00</span>
-                </div>
-                <div class="metric-row">
-                  <span>Validator Node:</span>
-                  <span class="font-mono">Validator-Consensus-01</span>
-                </div>
-                <div class="metric-row">
-                  <span>Consensus Engine:</span>
-                  <span class="font-mono">C++17 PoW &middot; MerkleTree&lt;T&gt;</span>
-                </div>
-              </div>
-            </div>
-
-            <button class="btn-primary w-full mt-4" id="btnMineBlock">
-              <span>⛏️ Mine Pending Votes into Block</span>
-            </button>
-          </div>
+          <form id="voterForm" class="form-inline">
+            <input type="text" id="newVoterId" class="input" placeholder="Voter ID (e.g. VTR-104)" required>
+            <input type="text" id="newVoterName" class="input" placeholder="Full Name" required>
+            <button type="submit" class="btn btn-outline">Register</button>
+          </form>
         </div>
+
       </div>
-    </div>
 
-    <!-- TAB 7: SECURITY & TAMPER LAB -->
-    <div id="tab-tamper" class="tab-panel">
-      <div class="panel-card max-w-4xl mx-auto">
-        <div class="card-header">
-          <div>
-            <h3>🚨 Security &amp; Tamper Detection Laboratory</h3>
-            <p class="text-muted">Interactive demonstration proving why blockchains cannot be altered without detection</p>
+      <!-- RIGHT: Results, Ledger, Security Lab -->
+      <div class="column">
+
+        <!-- 4. Election Results -->
+        <div class="card">
+          <div class="card-header">
+            <h3>📊 Live Election Results (On-Chain Tally)</h3>
           </div>
-          <span class="badge amber">Educational Sandbox</span>
-        </div>
-        <div class="card-body">
-          <div class="tamper-explanation">
-            <p>
-              In traditional databases, an administrator or hacker with access can quietly change a vote.
-              In this blockchain, every vote is part of a <strong>Merkle Tree</strong>, each block hash incorporates the <strong>Merkle Root</strong> and the <strong>Previous Block Hash</strong>.
-              If an attacker modifies even a single character in a past block, the hash changes, the Merkle tree breaks, and the entire cryptographic chain breaks instantly!
-            </p>
-          </div>
-
-          <div class="tamper-action-box">
-            <h4>🧪 Attack Simulation:</h4>
-            <div class="form-row mt-2">
-              <div class="form-group flex-1">
-                <label for="tamperBlockSelect">Select Block to Maliciously Alter:</label>
-                <select id="tamperBlockSelect" class="form-input">
-                  <option value="1">Block #1</option>
-                </select>
-              </div>
-              <div class="form-group flex-1">
-                <label for="tamperFakeName">Forged Malicious Candidate Name:</label>
-                <input type="text" id="tamperFakeName" class="form-input" value="HACKED_CORRUPT_CANDIDATE">
-              </div>
-            </div>
-
-            <div class="flex gap-3 mt-4">
-              <button class="btn-danger flex-1" id="btnTamperBlock">
-                <span>💥 Inject Tampered Vote</span>
-              </button>
-              <button class="btn-primary flex-1" id="btnVerifyTamper">
-                <span>🛡️ Run Blockchain Cryptographic Audit</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Tamper Audit Output Screen -->
-          <div id="tamperAuditScreen" class="tamper-screen mt-4 hidden">
-            <div class="screen-header" id="tamperAuditHeader">
-              <span class="screen-icon" id="tamperScreenIcon">⚠️</span>
-              <h4 id="tamperScreenTitle">Audit In Progress...</h4>
-            </div>
-            <pre class="screen-output font-mono" id="tamperScreenLog"></pre>
+          <div id="resultsList" class="results-list">
+            <!-- Populated dynamically -->
           </div>
         </div>
+
+        <!-- 5. Blockchain Blocks Explorer -->
+        <div class="card">
+          <div class="card-header">
+            <h3>⛓️ Blockchain Ledger</h3>
+            <span class="tag">Immutable History</span>
+          </div>
+          <div class="blocks-container" id="blocksContainer">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
+        <!-- 6. Tamper & Security Lab -->
+        <div class="card danger-card">
+          <div class="card-header">
+            <h3>🚨 Security & Tamper Detection Lab</h3>
+            <span class="tag red">Examiner Demo</span>
+          </div>
+          <p class="muted">Test how blockchain cryptography detects unauthorized attacks. Try tampering with Block #1, then run the audit!</p>
+          <div class="button-group">
+            <button id="btnTamper" class="btn btn-danger">💥 Tamper Block #1 Vote</button>
+            <button id="btnVerify" class="btn btn-primary">🛡️ Run Blockchain Audit</button>
+          </div>
+          <div id="tamperResult" class="alert hidden mt"></div>
+        </div>
+
       </div>
-    </div>
 
-    <!-- TAB 8: C++ OOP ARCHITECTURE -->
-    <div id="tab-oop" class="tab-panel">
-      <div class="panel-card max-w-4xl mx-auto">
-        <div class="card-header">
-          <div>
-            <h3>🏛️ Object-Oriented Programming (OOP) Architecture</h3>
-            <p class="text-muted">Mapping of C++ OOP concepts utilized throughout the codebase</p>
-          </div>
-          <span class="badge blue">C++17 Standard</span>
-        </div>
-        <div class="card-body">
-          <div class="oop-grid">
-
-            <div class="oop-card">
-              <div class="oop-icon">🎭</div>
-              <h4>1. Abstraction</h4>
-              <p>Pure virtual abstract base classes define strict interface contracts:</p>
-              <ul>
-                <li><code>IVerifiable</code>: Enforces <code>virtual bool verify() const = 0;</code></li>
-                <li><code>ICryptoHashable</code>: Enforces <code>virtual std::string computeHash() const = 0;</code></li>
-                <li><code>AbstractBlock</code>: Base contract enforcing consensus mining logic.</li>
-              </ul>
-            </div>
-
-            <div class="oop-card">
-              <div class="oop-icon">🔒</div>
-              <h4>2. Encapsulation</h4>
-              <p>Data hiding and state integrity protection:</p>
-              <ul>
-                <li>Private internal vectors for <code>chain</code>, <code>mempool</code>, and <code>transactions</code>.</li>
-                <li>Public const-correct accessors (e.g. <code>getHash()</code>, <code>getMerkleRoot()</code>).</li>
-                <li>Invariants prevent arbitrary block or transaction state tampering.</li>
-              </ul>
-            </div>
-
-            <div class="oop-card">
-              <div class="oop-icon">🧬</div>
-              <h4>3. Inheritance</h4>
-              <p>Specialization and hierarchical domain modeling:</p>
-              <ul>
-                <li><code>User</code> base class &rarr; specialized into <code>Voter</code> and <code>Candidate</code>.</li>
-                <li><code>AbstractBlock</code> &rarr; specialized into concrete <code>Block</code>.</li>
-                <li>Multiple inheritance: <code>VoteTransaction : public IVerifiable, public ICryptoHashable</code>.</li>
-              </ul>
-            </div>
-
-            <div class="oop-card">
-              <div class="oop-icon">🔄</div>
-              <h4>4. Polymorphism</h4>
-              <p>Runtime &amp; Compile-time dynamic dispatch:</p>
-              <ul>
-                <li><strong>Runtime:</strong> Base class pointers (<code>std::shared_ptr&lt;Block&gt;</code>) calling overridden virtual methods.</li>
-                <li><strong>Compile-time (Templates):</strong> <code>MerkleTree&lt;T&gt;</code> generic cryptographic audit tree for any hashable object.</li>
-              </ul>
-            </div>
-
-            <div class="oop-card">
-              <div class="oop-icon">➕</div>
-              <h4>5. Operator Overloading</h4>
-              <p>Natural C++ syntax for domain models:</p>
-              <ul>
-                <li><code>operator&lt;&lt;</code> for streaming formatted representations of blocks and transactions.</li>
-                <li><code>operator==</code> and <code>operator!=</code> for comparing transaction identities.</li>
-              </ul>
-            </div>
-
-            <div class="oop-card">
-              <div class="oop-icon">🌐</div>
-              <h4>6. Native Socket Web Server</h4>
-              <p>POSIX socket HTTP/1.1 server implemented in C++:</p>
-              <ul>
-                <li>Directly handles HTTP requests (<code>GET</code>, <code>POST</code>, <code>OPTIONS</code>).</li>
-                <li>Serves HTML, CSS, JavaScript files and JSON REST API without external frameworks.</li>
-              </ul>
-            </div>
-
-          </div>
-        </div>
-      </div>
     </div>
 
   </main>
 
-  <!-- Footer -->
-  <footer class="app-footer">
-    <p>Blockchain Voting System &middot; C++17 OOP Core &amp; Web Frontend &middot; Cryptographically Sealed Ledger</p>
+  <footer class="footer">
+    <p>Blockchain Voting System &middot; Clean C++ OOP Architecture (Abstraction, Encapsulation, Inheritance, Polymorphism)</p>
   </footer>
 
   <script src="app.js"></script>

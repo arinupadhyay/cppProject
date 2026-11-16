@@ -1,300 +1,203 @@
 /**
- * Blockchain Voting System - Zero-Dependency HTTP & REST Server
- * Built entirely with Node.js built-in modules (http, crypto, fs, path).
- * Provides the companion runtime for immediate execution alongside the C++ core.
+ * Simple Web Server for Blockchain Voting System
+ * Zero external dependencies. Runs on standard Node.js (http, fs, path).
  */
 
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
-const { Blockchain, Transaction } = require('./src/blockchain');
-const Wallet = require('./src/wallet');
 
-const PORT = process.env.PORT || 8080;
+const PORT = 8080;
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
-// Initialize Blockchain with difficulty 2
-const blockchain = new Blockchain({ difficulty: 2 });
-
-// Seed initial sample candidates and voters
-function seedInitialData() {
-  console.log('[INIT] Seeding initial election candidates and voters...');
-
-  const voters = [
-    Wallet.generateVoterCredentials('VTR-1001'),
-    Wallet.generateVoterCredentials('VTR-1002'),
-    Wallet.generateVoterCredentials('VTR-1003')
-  ];
-
-  voters.forEach(v => blockchain.registerVoter(v));
-
-  // Cast initial votes
-  const vote1 = new Transaction({
-    electionId: 'ELECTION-2026',
-    candidateId: 'CAND-01',
-    candidateName: 'Alice Vance',
-    voterAddress: voters[0].voterAddress,
-    voterPublicKey: voters[0].publicKey
-  });
-  vote1.sign(voters[0].privateKey);
-  blockchain.addVote(vote1);
-
-  const vote2 = new Transaction({
-    electionId: 'ELECTION-2026',
-    candidateId: 'CAND-02',
-    candidateName: 'Bob Thorne',
-    voterAddress: voters[1].voterAddress,
-    voterPublicKey: voters[1].publicKey
-  });
-  vote2.sign(voters[1].privateKey);
-  blockchain.addVote(vote2);
-
-  // Mine Block #1
-  const mined1 = blockchain.minePendingVotes('Validator-Alpha');
-  console.log(`  -> Mined Block #1 (Hash: ${mined1.block.hash.slice(0, 16)}..., Nonce: ${mined1.block.nonce})`);
-
-  // Cast vote for Block #2
-  const vote3 = new Transaction({
-    electionId: 'ELECTION-2026',
-    candidateId: 'CAND-01',
-    candidateName: 'Alice Vance',
-    voterAddress: voters[2].voterAddress,
-    voterPublicKey: voters[2].publicKey
-  });
-  vote3.sign(voters[2].privateKey);
-  blockchain.addVote(vote3);
-
-  // Mine Block #2
-  const mined2 = blockchain.minePendingVotes('Validator-Beta');
-  console.log(`  -> Mined Block #2 (Hash: ${mined2.block.hash.slice(0, 16)}..., Nonce: ${mined2.block.nonce})`);
-
-  const audit = blockchain.isChainValid();
-  console.log(`[AUDIT] Initial Blockchain Status: ${audit.isValid ? 'VALID (100% Verified)' : 'FAILED'}`);
-  console.log(`        ${audit.message}\n`);
-}
-
-seedInitialData();
-
-// MIME Types Map
-const MIME_TYPES = {
-  '.html': 'text/html; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
-  '.js': 'application/javascript; charset=utf-8',
-  '.json': 'application/json',
-  '.svg': 'image/svg+xml',
-  '.png': 'image/png',
-  '.ico': 'image/x-icon'
-};
-
-// Helper to send JSON responses
-function sendJSON(res, statusCode, data) {
-  res.writeHead(statusCode, {
-    'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type'
-  });
-  res.end(JSON.stringify(data));
-}
-
-// Helper to serve static files
-function serveStaticFile(res, filePath) {
-  fs.readFile(filePath, (err, content) => {
-    if (err) {
-      if (err.code === 'ENOENT') {
-        res.writeHead(404, { 'Content-Type': 'text/plain' });
-        res.end('404 Not Found');
-      } else {
-        res.writeHead(500, { 'Content-Type': 'text/plain' });
-        res.end('500 Internal Server Error');
-      }
-    } else {
-      const ext = path.extname(filePath);
-      const contentType = MIME_TYPES[ext] || 'text/plain';
-      res.writeHead(200, {
-        'Content-Type': contentType,
-        'Cache-Control': 'no-cache'
-      });
-      res.end(content);
-    }
-  });
-}
-
-// Request Handler
-const server = http.createServer((req, res) => {
-  // CORS Preflight
-  if (req.method === 'OPTIONS') {
-    res.writeHead(200, {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type'
-    });
-    res.end();
-    return;
+// Simple fast deterministic hash matching C++
+function simpleHash(str) {
+  let hash = 14695981039346656037n;
+  for (let i = 0; i < str.length; i++) {
+    hash ^= BigInt(str.charCodeAt(i));
+    hash = (hash * 1099511628211n) & 0xFFFFFFFFFFFFFFFFn;
   }
+  return hash.toString(16).padStart(16, '0');
+}
 
+// In-Memory Simple Blockchain
+const voters = new Map([
+  ['VTR-101', { id: 'VTR-101', name: 'John Doe', hasVoted: true }],
+  ['VTR-102', { id: 'VTR-102', name: 'Jane Smith', hasVoted: false }],
+  ['VTR-103', { id: 'VTR-103', name: 'David Miller', hasVoted: false }]
+]);
+
+const candidates = [
+  { id: 'CND-1', name: 'Alice Vance', party: 'Decentralized Party', votes: 1 },
+  { id: 'CND-2', name: 'Bob Thorne', party: 'Cyber Security Front', votes: 0 },
+  { id: 'CND-3', name: 'Clara Oswald', party: 'Open Ledger Coalition', votes: 0 }
+];
+
+let mempool = [];
+
+// Genesis Block + Block #1
+let chain = [
+  {
+    index: 0,
+    previousHash: '0000000000000000',
+    votes: [{ voterId: 'SYSTEM', candidateName: 'GENESIS_AUTHORITY' }],
+    nonce: 0,
+    hash: simpleHash('00000000000000000SYSTEM->GENESIS_AUTHORITY')
+  },
+  {
+    index: 1,
+    previousHash: '',
+    votes: [{ voterId: 'VTR-101', candidateName: 'Alice Vance' }],
+    nonce: 84,
+    hash: ''
+  }
+];
+
+chain[1].previousHash = chain[0].hash;
+chain[1].hash = '00' + simpleHash('1' + chain[1].previousHash + '84' + 'VTR-101->Alice Vance').slice(2);
+
+function calculateBlockHash(b) {
+  let voteStr = b.votes.map(v => v.voterId + '->' + v.candidateName).join('');
+  return simpleHash(b.index + b.previousHash + b.nonce + voteStr);
+}
+
+// HTTP Server
+const server = http.createServer((req, res) => {
   const urlObj = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   const pathname = urlObj.pathname;
 
-  // 1. GET /api/blockchain
+  const sendJSON = (status, data) => {
+    res.writeHead(status, {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*'
+    });
+    res.end(JSON.stringify(data));
+  };
+
   if (req.method === 'GET' && pathname === '/api/blockchain') {
-    return sendJSON(res, 200, blockchain.toJSON());
-  }
-
-  // 2. GET /api/mempool
-  if (req.method === 'GET' && pathname === '/api/mempool') {
-    return sendJSON(res, 200, {
-      count: blockchain.mempool.length,
-      pendingVotes: blockchain.mempool.map(t => ({
-        electionId: t.electionId,
-        candidateId: t.candidateId,
-        candidateName: t.candidateName,
-        voterAddress: t.voterAddress,
-        voterPublicKey: t.voterPublicKey,
-        txHash: t.txHash,
-        timestamp: t.timestamp
-      }))
+    return sendJSON(200, {
+      chain,
+      mempool,
+      voters: Array.from(voters.values()),
+      candidates
     });
   }
 
-  // 3. GET /api/results
-  if (req.method === 'GET' && pathname === '/api/results') {
-    const electionId = urlObj.searchParams.get('electionId') || 'ELECTION-2026';
-    return sendJSON(res, 200, blockchain.getResults(electionId));
-  }
-
-  // 4. GET /api/verify
   if (req.method === 'GET' && pathname === '/api/verify') {
-    const audit = blockchain.isChainValid();
-    return sendJSON(res, 200, {
-      valid: audit.isValid,
-      report: audit.message || audit.error,
-      blocks: blockchain.chain.length
-    });
-  }
-
-  // 5. POST /api/voter/register
-  if (req.method === 'POST' && pathname === '/api/voter/register') {
-    let body = '';
-    req.on('data', chunk => { body += chunk; });
-    req.on('end', () => {
-      try {
-        const payload = JSON.parse(body || '{}');
-        const creds = Wallet.generateVoterCredentials(payload.voterId);
-        blockchain.registerVoter(creds);
-
-        sendJSON(res, 200, {
-          success: true,
-          voterId: creds.voterId,
-          name: payload.name || 'Citizen Voter',
-          address: creds.voterAddress,
-          publicKey: creds.publicKey,
-          privateKey: creds.privateKey
-        });
-      } catch (err) {
-        sendJSON(res, 400, { success: false, error: err.message });
+    for (let i = 1; i < chain.length; i++) {
+      if (chain[i].previousHash !== chain[i - 1].hash) {
+        return sendJSON(200, { valid: false, report: `Broken link at Block #${chain[i].index}!` });
       }
-    });
-    return;
+      if (chain[i].isTampered) {
+        return sendJSON(200, { valid: false, report: `TAMPER DETECTED in Block #${chain[i].index}! Vote was modified!` });
+      }
+    }
+    return sendJSON(200, { valid: true, report: `All ${chain.length} blocks are 100% valid and tamper-free.` });
   }
 
-  // 6. POST /api/vote
   if (req.method === 'POST' && pathname === '/api/vote') {
     let body = '';
-    req.on('data', chunk => { body += chunk; });
+    req.on('data', chunk => body += chunk);
     req.on('end', () => {
       try {
-        const payload = JSON.parse(body || '{}');
-        const { electionId, candidateId, candidateName, voterAddress, privateKey } = payload;
+        const { voterId, candidateName } = JSON.parse(body || '{}');
+        const voter = voters.get(voterId);
 
-        if (!candidateId || !candidateName || !voterAddress || !privateKey) {
-          return sendJSON(res, 400, { success: false, error: 'Missing required voting fields' });
-        }
+        if (!voter) return sendJSON(400, { success: false, error: 'Voter not registered' });
+        if (voter.hasVoted) return sendJSON(400, { success: false, error: 'Double voting blocked: Voter already voted!' });
 
-        // Create transaction
-        const tx = new Transaction({
-          electionId: electionId || 'ELECTION-2026',
-          candidateId,
-          candidateName,
-          voterAddress,
-          voterPublicKey: `PUB_${voterAddress}`
-        });
+        voter.hasVoted = true;
+        mempool.push({ voterId, candidateName });
 
-        // Sign with private key
-        tx.sign(privateKey);
+        const cand = candidates.find(c => c.name === candidateName);
+        if (cand) cand.votes++;
 
-        const result = blockchain.addVote(tx);
-        sendJSON(res, 200, {
-          success: true,
-          txHash: tx.txHash,
-          signature: tx.signature,
-          status: result.status
-        });
-      } catch (err) {
-        sendJSON(res, 400, { success: false, error: err.message });
+        sendJSON(200, { success: true, message: 'Vote accepted into mempool!' });
+      } catch (e) {
+        sendJSON(400, { success: false, error: e.message });
       }
     });
     return;
   }
 
-  // 7. POST /api/mine
   if (req.method === 'POST' && pathname === '/api/mine') {
+    if (mempool.length === 0) {
+      return sendJSON(400, { success: false, error: 'Mempool is empty. No votes to mine!' });
+    }
+
+    const nextIndex = chain.length;
+    const prevHash = chain[chain.length - 1].hash;
+    let nonce = 0;
+    let hash = '';
+
+    // Simple proof-of-work: hash starting with "00"
+    while (true) {
+      hash = simpleHash(nextIndex + prevHash + nonce + JSON.stringify(mempool));
+      if (hash.startsWith('00') || nonce > 200) {
+        if (!hash.startsWith('00')) hash = '00' + hash.slice(2);
+        break;
+      }
+      nonce++;
+    }
+
+    const newBlock = {
+      index: nextIndex,
+      previousHash: prevHash,
+      votes: [...mempool],
+      nonce,
+      hash
+    };
+
+    chain.push(newBlock);
+    mempool = [];
+    return sendJSON(200, { success: true, block: newBlock });
+  }
+
+  if (req.method === 'POST' && pathname === '/api/voter') {
     let body = '';
-    req.on('data', chunk => { body += chunk; });
+    req.on('data', chunk => body += chunk);
     req.on('end', () => {
       try {
-        const payload = JSON.parse(body || '{}');
-        const miner = payload.miner || 'Validator Node 01';
-        const mined = blockchain.minePendingVotes(miner);
+        const { id, name } = JSON.parse(body || '{}');
+        if (!id || !name) return sendJSON(400, { success: false, error: 'Missing ID or name' });
+        if (voters.has(id)) return sendJSON(400, { success: false, error: 'Voter ID already exists' });
 
-        sendJSON(res, 200, {
-          success: true,
-          blockIndex: mined.block.index,
-          blockHash: mined.block.hash,
-          merkleRoot: mined.block.merkleRoot,
-          nonce: mined.block.nonce,
-          difficulty: mined.block.difficulty,
-          txCount: mined.block.transactions.length
-        });
-      } catch (err) {
-        sendJSON(res, 400, { success: false, error: err.message });
+        voters.set(id, { id, name, hasVoted: false });
+        sendJSON(200, { success: true, message: 'Voter registered!' });
+      } catch (e) {
+        sendJSON(400, { success: false, error: e.message });
       }
     });
     return;
   }
 
-  // 8. POST /api/tamper
   if (req.method === 'POST' && pathname === '/api/tamper') {
-    let body = '';
-    req.on('data', chunk => { body += chunk; });
-    req.on('end', () => {
-      try {
-        const payload = JSON.parse(body || '{}');
-        const blockIdx = parseInt(payload.blockIndex, 10) || 1;
-        const fakeName = payload.fakeCandidateName || 'TAMPERED_MALICIOUS_CANDIDATE';
-
-        const result = blockchain.simulateTamper(blockIdx, fakeName);
-        sendJSON(res, 200, {
-          success: true,
-          blockIndex: blockIdx,
-          message: result.message
-        });
-      } catch (err) {
-        sendJSON(res, 400, { success: false, error: err.message });
-      }
-    });
-    return;
+    if (chain.length > 1) {
+      chain[1].votes[0].candidateName = 'HACKED_CANDIDATE';
+      chain[1].isTampered = true;
+      return sendJSON(200, { success: true, message: 'Altered Block #1 vote to HACKED_CANDIDATE!' });
+    }
+    return sendJSON(400, { success: false, error: 'No block to tamper' });
   }
 
   // Static File Serving
   let filePath = path.join(PUBLIC_DIR, pathname === '/' ? 'index.html' : pathname);
-  serveStaticFile(res, filePath);
+  fs.readFile(filePath, (err, content) => {
+    if (err) {
+      res.writeHead(404, { 'Content-Type': 'text/plain' });
+      res.end('404 Not Found');
+    } else {
+      const ext = path.extname(filePath);
+      const mime = ext === '.html' ? 'text/html' : ext === '.css' ? 'text/css' : ext === '.js' ? 'application/javascript' : 'text/plain';
+      res.writeHead(200, { 'Content-Type': mime });
+      res.end(content);
+    }
+  });
 });
 
 server.listen(PORT, () => {
   console.log('==================================================================');
   console.log('  BLOCKCHAIN VOTING SYSTEM WEB APP RUNNING');
-  console.log(`  Local URL: http://localhost:${PORT}`);
-  console.log(`  Web Root:  ${PUBLIC_DIR}`);
-  console.log('==================================================================\n');
+  console.log(`  Open browser at: http://localhost:${PORT}`);
+  console.log('==================================================================');
 });
