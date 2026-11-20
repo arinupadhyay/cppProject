@@ -58,3 +58,4 @@ npm start
 # OR: node server.js
 ```
 Open **`http://localhost:8080`** in your browser to cast votes, mine blocks, and test tamper detection visually.
+.
